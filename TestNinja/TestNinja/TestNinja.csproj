@@ -43,15 +43,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="fundamentals\Stack.cs" />
+    <Compile Include="fundamentals\DemeritPointsCalculator.cs" />
+    <Compile Include="fundamentals\FizzBuzz.cs" />
     <Compile Include="fundamentals\ErrorLogger.cs" />
     <Compile Include="fundamentals\CustomerController.cs" />
     <Compile Include="fundamentals\HtmlFormatter.cs" />
     <Compile Include="fundamentals\Math.cs" />
     <Compile Include="fundamentals\Reservation.cs" />
+    <Compile Include="Mocking\Program.cs" />
+    <Compile Include="Mocking\FileReader.cs" />
+    <Compile Include="Mocking\VideoService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
