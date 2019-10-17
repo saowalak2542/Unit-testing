@@ -4,7 +4,7 @@
     {
         public static void Main()
         {
-            var service = new VideoService();
+            var service = new VideoService(new FileReader());
             var title = service.ReadVideoTitle();
         }
     }
