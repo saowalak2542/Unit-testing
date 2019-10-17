@@ -28,9 +28,9 @@ namespace TestNinja.Mocking
         {
             var videoIds = new List<int>();
 
-            using(var context = new VideoContext())
+            using (var context = new VideoContext())
 
-            var videos = _repository.GetUnprocessedVideos();
+                var videos = _repository.GetUnprocessedVideos();
             foreach (var v in videos)
                 videoIds.Add(v.Id);
 
