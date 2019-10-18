@@ -51,6 +51,9 @@
     <Compile Include="fundamentals\HtmlFormatter.cs" />
     <Compile Include="fundamentals\Math.cs" />
     <Compile Include="fundamentals\Reservation.cs" />
+    <Compile Include="Mocking\VideoRepository.cs" />
+    <Compile Include="Mocking\OrderService.cs" />
+    <Compile Include="Mocking\Product.cs" />
     <Compile Include="Mocking\Program.cs" />
     <Compile Include="Mocking\FileReader.cs" />
     <Compile Include="Mocking\VideoService.cs" />

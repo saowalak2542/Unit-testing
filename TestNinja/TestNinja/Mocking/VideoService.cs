@@ -26,19 +26,20 @@ namespace TestNinja.Mocking
                 return "Error parsing the video.";
             return video.Title;
         }
+        //[] => " "
+        //[{}, {} , {}] => "1,2,3"
+        public string GetUnprocessedVideosAsCsv() 
+       {
+        var videoIds = new List<int>();
 
-        public string GetUnprocessedVideosAsCsv()
-        {
-            var videoIds = new List<int>();
-
-         var videos =  _repository.GetUnprocessedVideos();
-         foreach (var v in videos)
+        var videos = _repository.GetUnprocessedVideos();                            
+            foreach (var v in videos)
                 videoIds.Add(v.Id);
 
             return String.Join(",", videoIds);
-
+            
         }
-    }
+}
 
     public class Video
     {
