@@ -21,5 +21,6 @@ namespace TestNinja.Mocking
             return new RedirectResult();
         }
     }
+    public class ActionResult { }
    
 }
