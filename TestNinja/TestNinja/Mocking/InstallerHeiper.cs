@@ -7,13 +7,13 @@ namespace TestNinja.Mocking
         private readonly IFileDownloader _fileDownloader;
         private string _setupDestinationFile;
 
-        public InstallerHelper(IFileDowloader fileDowloader)
+        public InstallerHelper(IFileDownloader fileDownloader)
         {
-            _fileDownloader = fileDowloader;
+            _fileDownloader = fileDownloader;
         }
+
         public bool DownloadInstaller(string customerName, string installerName)
         {
-            
             try
             {
                 _fileDownloader.DownloadFile(
