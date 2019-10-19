@@ -6,9 +6,14 @@ using System.Text;
 
 namespace TestNinja.Mocking
 {
-    public static class HousekeeperHelper
+    public class HousekeeperHelper
     {
         private static readonly UnitOfWork UnitOfWork = new UnitOfWork();
+
+        public HousekeeperHelper(IUnitOfWork unitOfWork, IStatementGenerator statementGenerator)
+        {
+            _unitOfWork = unitOfWork;
+        }
 
         public static bool SendStatementEmails(DateTime statementDate)
         {
@@ -19,7 +24,7 @@ namespace TestNinja.Mocking
                 if (housekeeper.Email == null)
                     continue;
 
-                var statementFilename = SaveStatement(housekeeper.Oid, housekeeper.FullName, statementDate);
+                var statementFilename =_ststementGenerator.SaveStatement(housekeeper.Oid, housekeeper.FullName, statementDate);
 
                 if (string.IsNullOrWhiteSpace(statementFilename))
                     continue;
@@ -29,7 +34,7 @@ namespace TestNinja.Mocking
 
                 try
                 {
-                    EmailFile(emailAddress, emailBody, statementFilename,
+                    _emailSender.EmailFile(emailAddress, emailBody, statementFilename,
                         string.Format("Sandpiper Statement {0:yyyy-MM} {1}", statementDate, housekeeper.FullName));
                 }
                 catch (Exception e)
