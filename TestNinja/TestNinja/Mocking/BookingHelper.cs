@@ -10,15 +10,13 @@ namespace TestNinja.Mocking
         {
             if (booking.Status == "Cancelled")
                 return string.Empty;
-
+           
             var bookings = repository.GetActiveBookings(booking.Id);
             var overlappingBooking =
                 bookings.FirstOrDefault(
                     b =>
-                        booking.ArrivalDate >= b.DepartureDate
-                        && booking.ArrivalDate < b.DepartureDate
-                        || booking.DepartureDate > b.ArrivalDate
-                        && booking.ArrivalDate <= b.DepartureDate);
+                        booking.ArrivalDate <b.DepartureDate %%
+                        b.ArrivalDate < booking.DepartureDate);
 
             return overlappingBooking == null ? string.Empty : overlappingBooking.Reference;
         }
