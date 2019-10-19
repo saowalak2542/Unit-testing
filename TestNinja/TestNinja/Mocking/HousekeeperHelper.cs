@@ -15,9 +15,9 @@ namespace TestNinja.Mocking
             _unitOfWork = unitOfWork;
         }
 
-        public static bool SendStatementEmails(DateTime statementDate)
+        public  void  SendStatementEmails(DateTime statementDate)
         {
-            var housekeepers = UnitOfWork.Query<Housekeeper>();
+            var housekeepers = _UnitOfWork.Query<Housekeeper>();
 
             foreach (var housekeeper in housekeepers)
             {
