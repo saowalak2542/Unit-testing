@@ -1,182 +1,138 @@
 ﻿using System;
-using System.IO;
-using System.Net;
-using System.Net.Mail;
-using System.Text;
-
-namespace TestNinja.Mocking
+using System.Collections.Generic;
+using System.Linq;
+using Moq;
+using NUnit.Framework;
+using TestNinja.Mocking;
+namespace TestNinja.UnitTests.Mocking
 {
-    public class Housekeeperservice
+    [TestFixture]
+    public class HouseKeeperServiceTests
     {
-        private readonly UnitOfWork _UnitOfWork );
-        private readonly IStatementGenerator _statementGenerator;
-        private readonly IEmailSender _emailsender;
-        private readonly IXtraMessageBox _messagebox;
+        private HousekeeperService _service;
+        private Mock<IStatementGenerator> _statementGenerator;
+        private Mock<IEmailSender> _emailSender;
+        private Mock<IXtraMessageBox> _messageBox;
+        private DateTime _statementDate = new DateTime(2017, 1, 1);
+        private Housekeeper _houseKeeper;
+        private readonly string _statementFileName = "fileName";
 
-
-        public Housekeeperservice
-
-            IUnitOfWork = unitOfWork,
-            IStatementGenerator statementGenerator,
-            IEmailSender emailSender,
-            IXtraMessageBox messageBox)
+        [SetUp]
+        public void SetUp()
         {
-           _unitOfWork = UnitOfWork;
-            _ststementGenerator = StatementGenerator;
-            _emailSender = emailSender;
-            _messageBox = MessageBox;
-        }
-    }   
-        public  void  SendStatementEmails(DateTime statementDate)
-        {
-            var housekeepers = _UnitOfWork.Query<Housekeeper>();
-
-            foreach (var housekeeper in housekeepers)
+            _houseKeeper = new Housekeeper { Email = "a", FullName = "b", Oid = 1, StatementEmailBody = "c" };
+            var unitOfWork = new Mock<IUnitOfWork>();
+            unitOfWork.Setup(uow => uow.Query<Housekeeper>()).Returns(new List<Housekeeper>
             {
-                if (housekeeper.Email == null)
-                   continue;
-
-                var statementFilename =_ststementGenerator.SaveStatement(housekeeper.Oid, housekeeper.FullName, statementDate);
-
-                if (string.IsNullOrWhiteSpace(statementFilename))
-                    continue;
-
-                var emailAddress = housekeeper.Email;
-                var emailBody = housekeeper.StatementEmailBody;
-
-                try
-                {
-                    _emailSender.EmailFile(emailAddress, emailBody, statementFilename,
-                        string.Format("Sandpiper Statement {0:yyyy-MM} {1}", statementDate, housekeeper.FullName));
-                }
-                catch (Exception e)
-                {
-                    XtraMessageBox.Show(e.Message, string.Format("Email failure: {0}", emailAddress),
-                        MessageBoxButtons.OK);
-                }
-            }
-
-            return true;
+                _houseKeeper
+            }.AsQueryable());
+            var statementGenerator = new Mock<IStatementGenerator>();
+            var emailSender = new Mock<IEmailSender>();
+            var messageBox = new Mock<IXtraMessageBox>();
+            _service = new HousekeeperService(
+                unitOfWork.Object,
+                _statementGenerator.Object,
+                _emailSender.Object,
+                _messageBox.Object);
         }
-
-        private static string SaveStatement(int housekeeperOid, string housekeeperName, DateTime statementDate)
+        [Test]
+        public void SendStatementEmails_WhenCalled_GenerateStatements()
         {
-            var report = new HousekeeperStatementReport(housekeeperOid, statementDate);
+            _service.SendStatementEmails(_statementDate);
 
-            if (!report.HasData)
-                return string.Empty;
-
-            report.CreateDocument();
-
-            var filename = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                string.Format("Sandpiper Statement {0:yyyy-MM} {1}.pdf", statementDate, housekeeperName));
-
-            report.ExportToPdf(filename);
-
-            return filename;
+            _statementGenerator.Verify(sg =>
+                sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, (_statementDate)));
+            sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, _statementDate));
         }
-
-        private static void EmailFile(string emailAddress, string emailBody, string filename, string subject)
+        [Test]
+        public void SendStatementEmails_HouseKeepersEmailIsNull_ShouldNotGenerateStatement()
         {
-            var client = new SmtpClient(SystemSettingsHelper.EmailSmtpHost)
-            {
-                Port = SystemSettingsHelper.EmailPort,
-                Credentials =
-                    new NetworkCredential(
-                        SystemSettingsHelper.EmailUsername,
-                        SystemSettingsHelper.EmailPassword)
-            };
-
-            var from = new MailAddress(SystemSettingsHelper.EmailFromEmail, SystemSettingsHelper.EmailFromName,
-                Encoding.UTF8);
-            var to = new MailAddress(emailAddress);
-
-            var message = new MailMessage(from, to)
-            {
-                Subject = subject,
-                SubjectEncoding = Encoding.UTF8,
-                Body = emailBody,
-                BodyEncoding = Encoding.UTF8
-            };
-
-            message.Attachments.Add(new Attachment(filename));
-            client.Send(message);
-            message.Dispose();
-
-            File.Delete(filename);
+            _houseKeeper.Email = null;
+            _service.SendStatementEmails(_statementDate);
+            _statementGenerator.Verify(sg =>
+                sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, (_statementDate)),
+                Times.Never);
         }
-    }
-
-    public enum MessageBoxButtons
-    {
-        OK
-    }
-
-    public class XtraMessageBox
-    {
-        public static void Show(string s, string housekeeperStatements, MessageBoxButtons ok)
+        [Test]
+        public void SendStatementEmails_HouseKeepersEmailIsWhitespace_ShouldNotGenerateStatement()
         {
+            _houseKeeper.Email = " ";
+            _service.SendStatementEmails(_statementDate);
+            _statementGenerator.Verify(sg =>
+                sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, (_statementDate)),
+                Times.Never);
         }
-    }
-
-    public class MainForm
-    {
-        public bool HousekeeperStatementsSending { get; set; }
-    }
-
-    public class DateForm
-    {
-        public DateForm(string statementDate, object endOfLastMonth)
+        [Test]
+        public void SendStatementEmails_HouseKeepersEmailIsEmpty_ShouldNotGenerateStatement()
         {
+            _houseKeeper.Email = "";
+            _service.SendStatementEmails(_statementDate);
+            _statementGenerator.Verify(sg =>
+                sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, (_statementDate)),
+                Times.Never);
         }
-
-        public DateTime Date { get; set; }
-
-        public DialogResult ShowDialog()
+        [Test]
+        public void SendStatementEmails_WhenCalled_EmailTheStatement()
         {
-            return DialogResult.Abort;
+            _statementGenerator
+                .Setup(sg => sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, (_statementGenerator)))
+                .Returns(_statementGenerator);
+
+            _service.SendStatementEmails(_statementDate);
+
+            _emailSender.Verify(es => es.EmailFile(
+                _houseKeeper.Email,
+                _houseKeeper.StatementEmailBody,
+                _statementFileName,
+                It.IsAny<string>()));
         }
-    }
-
-    public enum DialogResult
-    {
-        Abort,
-        OK
-    }
-
-    public class SystemSettingsHelper
-    {
-        public static string EmailSmtpHost { get; set; }
-        public static int EmailPort { get; set; }
-        public static string EmailUsername { get; set; }
-        public static string EmailPassword { get; set; }
-        public static string EmailFromEmail { get; set; }
-        public static string EmailFromName { get; set; }
-    }
-
-    public class Housekeeper
-    {
-        public string Email { get; set; }
-        public int Oid { get; set; }
-        public string FullName { get; set; }
-        public string StatementEmailBody { get; set; }
-    }
-
-    public class HousekeeperStatementReport
-    {
-        public HousekeeperStatementReport(int housekeeperOid, DateTime statementDate)
+        [Test]
+        public void SendStatementEmails_StatementFileNameIsNull_ShouldNotEmailTheStatement()
         {
+            _statementGenerator
+                .Setup(sg => sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, (_statementGenerator)))
+                .Returns(() => null);
+
+            _service.SendStatementEmails(_statementDate);
+
+            _emailSender.Verify(es => es.EmailFile(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>()),
+                Times.Never);
         }
-
-        public bool HasData { get; set; }
-
-        public void CreateDocument()
+        [Test]
+        public void SendStatementEmails_StatementFileNameIsEmptyString_ShouldNotEmailTheStatement()
         {
+            _statementGenerator
+                .Setup(sg => sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, (_statementGenerator)))
+                .Returns("");
+
+            _service.SendStatementEmails(_statementDate);
+
+            _emailSender.Verify(es => es.EmailFile(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>()),
+                Times.Never);
         }
-
-        public void ExportToPdf(string filename)
+        [Test]
+        public void SendStatementEmails_StatementFileNameIsWhitespace_ShouldNotEmailTheStatement()
         {
+            _statementGenerator
+                .Setup(sg => sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, (_statementGenerator)))
+                .Returns(" ");
+
+            _service.SendStatementEmails(_statementDate);
+
+            _emailSender.Verify(es => es.EmailFile(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>()),
+                Times.Never);
         }
     }
 }
