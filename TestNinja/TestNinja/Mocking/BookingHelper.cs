@@ -10,24 +10,28 @@ namespace TestNinja.Mocking
         {
             if (booking.Status == "Cancelled")
                 return string.Empty;
-           
+
             var bookings = repository.GetActiveBookings(booking.Id);
             var overlappingBooking =
                 bookings.FirstOrDefault(
                     b =>
-                        booking.ArrivalDate <b.DepartureDate %%
+                        booking.ArrivalDate < b.DepartureDate &&
                         b.ArrivalDate < booking.DepartureDate);
 
             return overlappingBooking == null ? string.Empty : overlappingBooking.Reference;
         }
     }
 
-
-    public class UnitOfWork
+    public interface IUnitOfWork
     {
-        public IQuryble<Booking> Query<T>()
+        IQueryable<T> Query<T>();
+    }
+
+    public class UnitOfWork : IUnitOfWork
+    {
+        public IQueryable<T> Query<T>()
         {
-            return new List<Booking>().AsQueryable();
+            return new List<T>().AsQueryable();
         }
     }
 

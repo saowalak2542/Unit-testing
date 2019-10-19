@@ -10,7 +10,7 @@ namespace TestNinja.UnitTests.Mocking
     [TestFixture]
     public class HouseKeeperServiceTests
     {
-        private HousekeeperService _service;
+        private HouseKeeperService _service;
         private Mock<IStatementGenerator> _statementGenerator;
         private Mock<IEmailSender> _emailSender;
         private Mock<IXtraMessageBox> _messageBox;
@@ -22,6 +22,7 @@ namespace TestNinja.UnitTests.Mocking
         public void SetUp()
         {
             _houseKeeper = new Housekeeper { Email = "a", FullName = "b", Oid = 1, StatementEmailBody = "c" };
+
             var unitOfWork = new Mock<IUnitOfWork>();
             unitOfWork.Setup(uow => uow.Query<Housekeeper>()).Returns(new List<Housekeeper>
             {
@@ -37,20 +38,22 @@ namespace TestNinja.UnitTests.Mocking
             _emailSender = new Mock<IEmailSender>();
             _messageBox = new Mock<IXtraMessageBox>();
 
-            _service = new HousekeeperService(
+            _service = new HouseKeeperService(
                 unitOfWork.Object,
                 _statementGenerator.Object,
                 _emailSender.Object,
                 _messageBox.Object);
         }
+
         [Test]
         public void SendStatementEmails_WhenCalled_GenerateStatements()
         {
             _service.SendStatementEmails(_statementDate);
 
             _statementGenerator.Verify(sg =>
-                sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, _statementDate));
+                sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, (_statementDate)));
         }
+
         [Test]
         public void SendStatementEmails_HouseKeepersEmailIsNull_ShouldNotGenerateStatement()
         {
@@ -62,6 +65,7 @@ namespace TestNinja.UnitTests.Mocking
                 sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, (_statementDate)),
                 Times.Never);
         }
+
         [Test]
         public void SendStatementEmails_HouseKeepersEmailIsWhitespace_ShouldNotGenerateStatement()
         {
@@ -73,6 +77,7 @@ namespace TestNinja.UnitTests.Mocking
                 sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, (_statementDate)),
                 Times.Never);
         }
+
         [Test]
         public void SendStatementEmails_HouseKeepersEmailIsEmpty_ShouldNotGenerateStatement()
         {
@@ -84,14 +89,15 @@ namespace TestNinja.UnitTests.Mocking
                 sg.SaveStatement(_houseKeeper.Oid, _houseKeeper.FullName, (_statementDate)),
                 Times.Never);
         }
+
         [Test]
         public void SendStatementEmails_WhenCalled_EmailTheStatement()
         {
-
             _service.SendStatementEmails(_statementDate);
 
             VerifyEmailSent();
         }
+
         [Test]
         public void SendStatementEmails_StatementFileNameIsNull_ShouldNotEmailTheStatement()
         {
@@ -111,6 +117,7 @@ namespace TestNinja.UnitTests.Mocking
 
             VerifyEmailNotSent();
         }
+
         [Test]
         public void SendStatementEmails_StatementFileNameIsWhitespace_ShouldNotEmailTheStatement()
         {
@@ -120,6 +127,7 @@ namespace TestNinja.UnitTests.Mocking
 
             VerifyEmailNotSent();
         }
+
         [Test]
         public void SendStatementEmails_EmailSendingFails_DisplayAMessageBox()
         {
@@ -138,12 +146,13 @@ namespace TestNinja.UnitTests.Mocking
         private void VerifyEmailNotSent()
         {
             _emailSender.Verify(es => es.EmailFile(
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<string>()),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()),
                 Times.Never);
         }
+
         private void VerifyEmailSent()
         {
             _emailSender.Verify(es => es.EmailFile(
@@ -152,5 +161,6 @@ namespace TestNinja.UnitTests.Mocking
                 _statementFileName,
                 It.IsAny<string>()));
         }
+
     }
 }
