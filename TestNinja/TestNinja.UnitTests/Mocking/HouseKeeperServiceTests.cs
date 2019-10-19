@@ -9,10 +9,16 @@ namespace TestNinja.UnitTests.Mocking
     [TestFixture]
     public class HouseKeeperServiceTests
     {
-        [Test]
-        public void SendStatementEmails_WhenCalled_GenerateStatements()
+        private HouseKeeperService service;
+        private Mock<ISTatementGenerator> _statementGenerator;
+        private Mock<IEmailSender> _messageBox;
+        private DateTime _statementDate = new DateTime(2017, 1, 1);
+
+        [SetUp]
+        public void SetUp()
         {
             var unitOfWork = new Mock<IUnitOfWork>();
+            _houseKeeper = new Housekeeper { Email = "a", FullName = "b", Oid = 1, StatementEmailBody}
             unitOfWork.Setup(uow => uow.Query<Housekeeper>()).Returns(new List<Housekeeper>
             {
                 new Housekeeper {Email = "a", FullName = "b", Oid = 1, StatementEmailBody = "c" }
@@ -23,15 +29,22 @@ namespace TestNinja.UnitTests.Mocking
             var messageBox = new Mock<IXtraMessageBox>();
 
 
-            var service = new HousekeeperService(
+            _service = new HousekeeperService(
                 unitOfWork.Object,
                 statementGenerator.Object,
                 emailSender.Object,
                 messageBox.Object);
 
-            service.SendStatementEmails(new DateTime(2017, 1, 1));
+        }
 
-            statementGenerator.Verify(sg => sg.SaveStatement(1, "b", (new DateTime(2017, 1, 1))));
+
+        [Test]
+        public void SendStatementEmails_WhenCalled_GenerateStatements()
+        {
+            
+            _service.SendStatementEmails(new DateTime(2017, 1, 1));
+
+            statementGenerator.Verify(sg => sg.SaveStatement(1, "b", ( _statementDate)));
 
         }
     }

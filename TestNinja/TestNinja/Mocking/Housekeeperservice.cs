@@ -6,15 +6,27 @@ using System.Text;
 
 namespace TestNinja.Mocking
 {
-    public class HousekeeperHelper
+    public class Housekeeperservice
     {
-        private static readonly UnitOfWork UnitOfWork = new UnitOfWork();
+        private readonly UnitOfWork _UnitOfWork );
+        private readonly IStatementGenerator _statementGenerator;
+        private readonly IEmailSender _emailsender;
+        private readonly IXtraMessageBox _messagebox;
 
-        public HousekeeperHelper(IUnitOfWork unitOfWork, IStatementGenerator statementGenerator)
+
+        public Housekeeperservice
+
+            IUnitOfWork = unitOfWork,
+            IStatementGenerator statementGenerator,
+            IEmailSender emailSender,
+            IXtraMessageBox messageBox)
         {
-            _unitOfWork = unitOfWork;
+           _unitOfWork = UnitOfWork;
+            _ststementGenerator = StatementGenerator;
+            _emailSender = emailSender;
+            _messageBox = MessageBox;
         }
-
+    }   
         public  void  SendStatementEmails(DateTime statementDate)
         {
             var housekeepers = _UnitOfWork.Query<Housekeeper>();
